@@ -1,0 +1,32 @@
+services:
+  llm:
+    image: ghcr.io/ggml-org/llama.cpp:server
+    container_name: pubspec-llm
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./models:/models
+    command: >
+      --model /models/Phi-3-mini-4k-instruct-q4.gguf
+      --host 0.0.0.0
+      --port 8080
+      --ctx-size 2048
+      --threads 8
+      --parallel 1
+    restart: unless-stopped
+
+
+
+  api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.api
+    container_name: pubspec-api
+    environment:
+      - LLM_BASE_URL=http://llm:8080
+      - MAX_REPAIRS=1
+    ports:
+      - "8000:8000"
+    depends_on:
+      - llm
+    restart: unless-stopped
